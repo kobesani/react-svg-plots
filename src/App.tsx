@@ -151,6 +151,12 @@ function App() {
       >
         Clear Selection
       </button>
+      <button id="mode-select" onClick={(event) => changeModeToSelect(event)}>
+        Select
+      </button>
+      <button id="mode-pan" onClick={(event) => changeModeToPan(event)}>
+        Pan
+      </button>
     </>
   );
 }

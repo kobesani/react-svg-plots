@@ -1,8 +1,15 @@
-#svg-container svg {
-    cursor: url('../Crosshair-Handwriting.png') 7 7, crosshair;
-    /* cursor: url('./assets/Crosshair-Handwriting.png') 7 7, crosshair; */
-    border: 3px solid red;
-  }
+#svg-container svg.mode-select {
+  cursor: url('../Crosshair-Handwriting.png') 7 7, crosshair;
+  /* cursor: url('./assets/Crosshair-Handwriting.png') 7 7, crosshair; */
+  border: 3px solid red;
+}
+
+#svg-container svg.mode-pan {
+  cursor: grab;
+  border: 3px solid green;
+}
+
+#svg-container svg {}
   
   #clear-button {
     margin-top: 10px;

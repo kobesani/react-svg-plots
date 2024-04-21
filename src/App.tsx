@@ -1,6 +1,6 @@
 import "./assets/css/App.css";
 
-import { useRef, MouseEvent, useState, useEffect } from "react";
+import { useRef, useState, useEffect, MouseEvent } from "react";
 
 import {
   BoundingBox,
@@ -13,7 +13,13 @@ import {
 import BrushRect from "./components/BrushRect";
 import Circle from "./components/Circle";
 
-import { startBrush, updateBrush } from "./utils/handlers/brushHandlers";
+import {
+  startBrush,
+  updateBrush,
+  finishBrush,
+} from "./utils/handlers/brushHandlers";
+
+import { clearRects, clearLastRect } from "./utils/handlers/buttonHandlers";
 
 function App() {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -34,9 +40,15 @@ function App() {
     viewportHeight: 600,
   };
 
-  // const scale = 1;
-  // const minx = 0;
-  // const miny = 0;
+  const changeModeToSelect = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    svgRef.current?.setAttribute("class", "mode-select");
+  };
+
+  const changeModeToPan = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    svgRef.current?.setAttribute("class", "mode-pan");
+  };
 
   useEffect(() => {
     const data = [
@@ -57,141 +69,12 @@ function App() {
     );
   }, []);
 
-  const circleWithinRectangle = (
-    circle: CircleProps,
-    rectangle: Rectangle
-  ): boolean => {
-    return (
-      circle.cx >= rectangle.x &&
-      circle.cx <= rectangle.x + rectangle.width &&
-      circle.cy >= rectangle.y &&
-      circle.cy <= rectangle.y + rectangle.height
-    );
-  };
-
-  // const startBrush = (event: MouseEvent<HTMLDivElement>) => {
-  //   event.preventDefault();
-
-  //   const svg = svgRef.current;
-  //   if (!svg) return;
-
-  //   const startX =
-  //     minx + scale * event.clientX - svg.getBoundingClientRect().left;
-  //   const startY =
-  //     miny + scale * event.clientY - svg.getBoundingClientRect().top;
-  //   setBoundingBox({ startX, startY, endX: startX, endY: startY });
-  //   const newRect: Rectangle = {
-  //     x: Math.min(startX, startX),
-  //     y: Math.min(startY, startY),
-  //     width: 0,
-  //     height: 0,
-  //   };
-  //   setRectangles([...rectangles, newRect]);
-  // };
-
-  // const updateBrush = (event: MouseEvent<HTMLDivElement>) => {
-  //   event.preventDefault();
-
-  //   if (!boundingBox) return;
-
-  //   const svg = svgRef.current;
-  //   if (!svg) return;
-
-  //   const endX =
-  //     minx + scale * event.clientX - svg.getBoundingClientRect().left;
-  //   const endY = miny + scale * event.clientY - svg.getBoundingClientRect().top;
-  //   setBoundingBox({ ...boundingBox, endX, endY });
-
-  //   const newRect: Rectangle = {
-  //     x: Math.min(boundingBox.startX, endX),
-  //     y: Math.min(boundingBox.startY, endY),
-  //     width: Math.abs(endX - boundingBox.startX),
-  //     height: Math.abs(endY - boundingBox.startY),
-  //   };
-
-  //   if (!rectangles.length) {
-  //     setRectangles([newRect]);
-  //   } else {
-  //     const updatedRectangles = [...rectangles.slice(0, -1), newRect];
-  //     setRectangles(updatedRectangles);
-  //   }
-
-  //   setCircles((prevCircles) => {
-  //     return prevCircles.map((circle) => {
-  //       const isSelected = rectangles.some((rectangle) =>
-  //         circleWithinRectangle(circle, rectangle)
-  //       );
-  //       return {
-  //         ...circle,
-  //         fill: isSelected ? selectedCircleColor : defaultCircleColor,
-  //       };
-  //     });
-  //   });
-  // };
-
-  const finishBrush = (event: MouseEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setBoundingBox(null);
-    /*
-      Removes only last rectangle that happens when you go outside of the box and mouseup
-      This works too, but the filter on all 0 height/width rects also works
-    */
-    // const lastRectangle = rectangles.slice(-1)[0]
-    // if (lastRectangle.height === 0 && lastRectangle.width === 0) {
-    //   setRectangles(rectangles.slice(0, -1))
-    // }
-
-    setRectangles(
-      rectangles.filter((rect) => !(rect.height === 0 && rect.width === 0))
-    );
-  };
-
-  const clearRects = (event: MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    setRectangles([]);
-
-    setCircles((prevCircles) =>
-      prevCircles.map((circle) => ({
-        ...circle,
-        fill: defaultCircleColor,
-      }))
-    );
-  };
-
-  const clearLastRect = (event: MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-
-    // no rectangles drawn yet
-    if (!rectangles.length) return;
-
-    const updatedRectangles = rectangles.slice(0, -1);
-    setRectangles(updatedRectangles);
-
-    setCircles((prevCircles) => {
-      return prevCircles.map((circle) => {
-        const isSelected = updatedRectangles.some((rectangle) =>
-          circleWithinRectangle(circle, rectangle)
-        );
-        return {
-          ...circle,
-          fill: isSelected ? selectedCircleColor : defaultCircleColor,
-        };
-      });
-    });
-  };
-
   return (
     <>
       <div
         id="svg-container"
         onMouseDown={(event) =>
-          startBrush(
-            event,
-            svgRef,
-            svgViewBox,
-            setBoundingBox,
-            setRectangles
-          )
+          startBrush(event, svgRef, svgViewBox, setBoundingBox, setRectangles)
         }
         onMouseMove={(event) =>
           updateBrush(
@@ -207,7 +90,9 @@ function App() {
             selectedCircleColor
           )
         }
-        onMouseUp={finishBrush}
+        onMouseUp={(event) =>
+          finishBrush(event, rectangles, setBoundingBox, setRectangles)
+        }
       >
         <svg
           preserveAspectRatio="xMidYMid slice"
@@ -215,8 +100,6 @@ function App() {
           width={svgViewBox.viewportWidth}
           height={svgViewBox.viewportHeight}
           viewBox={generateViewBoxAttribute(svgViewBox)}
-          // viewBox={`${minx} ${miny} ${scale * svgWidth} ${scale * svgHeight}`}
-          // viewBox="0 0 0 0"
         >
           <rect
             height={600}
@@ -245,10 +128,27 @@ function App() {
           ))}
         </svg>
       </div>
-      <button id="clear-last-button" onClick={clearLastRect}>
+      <button
+        id="clear-last-button"
+        onClick={(event) =>
+          clearLastRect(
+            event,
+            rectangles,
+            setRectangles,
+            setCircles,
+            defaultCircleColor,
+            selectedCircleColor
+          )
+        }
+      >
         Clear Last Selection
       </button>
-      <button id="clear-button" onClick={clearRects}>
+      <button
+        id="clear-button"
+        onClick={(event) =>
+          clearRects(event, setRectangles, setCircles, defaultCircleColor)
+        }
+      >
         Clear Selection
       </button>
     </>

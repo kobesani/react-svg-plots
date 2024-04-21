@@ -117,6 +117,14 @@ export const finishBrush = (
 ) => {
   event.preventDefault();
   setBoundingBox(null);
+  /*
+    Removes only last rectangle that happens when you go outside of the box and mouseup
+    This works too, but the filter on all 0 height/width rects also works
+  */
+  // const lastRectangle = rectangles.slice(-1)[0]
+  // if (lastRectangle.height === 0 && lastRectangle.width === 0) {
+  //   setRectangles(rectangles.slice(0, -1))
+  // }
   setRectangles(
     rectangles.filter((rect) => !(rect.height === 0 && rect.width === 0))
   );

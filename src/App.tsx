@@ -8,6 +8,7 @@ import {
   Rectangle,
   SVGViewBox,
   generateViewBoxAttribute,
+  SVGPanController,
 } from "./PropTypes";
 
 import BrushRect from "./components/BrushRect";
@@ -26,19 +27,30 @@ function App() {
   const [boundingBox, setBoundingBox] = useState<BoundingBox | null>(null);
   const [rectangles, setRectangles] = useState<Rectangle[]>([]);
   const [circles, setCircles] = useState<CircleProps[]>([]);
+  const [svgViewBox, setSvgViewBox] = useState<SVGViewBox>(
+    {
+      minx: 0,
+      miny: 0,
+      scaleWidth: 1.0,
+      scaleHeight: 1.0,
+      viewportWidth: 800,
+      viewportHeight: 600,
+    }
+  );
+
+  const [svgPanController, setSvgPanController] = useState<SVGPanController>(
+    {
+      isDragging: false,
+      lastMouseX: 0,
+      lastMouseY: 0,
+      velocityX: 0,
+      velocityY: 0,
+    }
+  );
 
   const defaultCircleColor = "seagreen";
   const selectedCircleColor = "purple";
   const defaultCircleRadius = 10;
-
-  const svgViewBox: SVGViewBox = {
-    minx: 0,
-    miny: 0,
-    scaleWidth: 1.0,
-    scaleHeight: 1.0,
-    viewportWidth: 800,
-    viewportHeight: 600,
-  };
 
   const changeModeToSelect = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();

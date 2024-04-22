@@ -20,6 +20,8 @@ import {
   finishBrush,
 } from "./utils/handlers/brushHandlers";
 
+import { startPan, updatePan, finishPan } from "./utils/handlers/panMode";
+
 import { clearRects, clearLastRect } from "./utils/handlers/buttonHandlers";
 
 function App() {
@@ -27,38 +29,44 @@ function App() {
   const [boundingBox, setBoundingBox] = useState<BoundingBox | null>(null);
   const [rectangles, setRectangles] = useState<Rectangle[]>([]);
   const [circles, setCircles] = useState<CircleProps[]>([]);
-  const [svgViewBox, setSvgViewBox] = useState<SVGViewBox>(
-    {
-      minx: 0,
-      miny: 0,
-      scaleWidth: 1.0,
-      scaleHeight: 1.0,
-      viewportWidth: 800,
-      viewportHeight: 600,
-    }
-  );
+  const [isDragging, setIsDragging] = useState<boolean>(false)
+  const [svgViewBox, setSvgViewBox] = useState<SVGViewBox>({
+    minx: 0,
+    miny: 0,
+    scaleWidth: 1.0,
+    scaleHeight: 1.0,
+    viewportWidth: 800,
+    viewportHeight: 600,
+  });
 
-  const [svgPanController, setSvgPanController] = useState<SVGPanController>(
-    {
-      isDragging: false,
-      lastMouseX: 0,
-      lastMouseY: 0,
-      velocityX: 0,
-      velocityY: 0,
-    }
-  );
+  const [svgPanController, setSvgPanController] = useState<SVGPanController>({
+    lastMouseX: 0,
+    lastMouseY: 0,
+    velocityX: 0,
+    velocityY: 0,
+  });
+
+  useEffect(() => {
+    // console.log(svgViewBox);
+    console.log(isDragging);
+  }, [isDragging])
+
+  const [mode, setMode] = useState<string | null>(null);
 
   const defaultCircleColor = "seagreen";
   const selectedCircleColor = "purple";
   const defaultCircleRadius = 10;
+  const frictionCoefficient = 0.99;
 
   const changeModeToSelect = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
+    setMode("select");
     svgRef.current?.setAttribute("class", "mode-select");
   };
 
   const changeModeToPan = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
+    setMode("pan");
     svgRef.current?.setAttribute("class", "mode-pan");
   };
 
@@ -86,25 +94,50 @@ function App() {
       <div
         id="svg-container"
         onMouseDown={(event) =>
-          startBrush(event, svgRef, svgViewBox, setBoundingBox, setRectangles)
+          startPan(event, svgPanController, setSvgPanController, setIsDragging)
         }
         onMouseMove={(event) =>
-          updateBrush(
+          updatePan(
             event,
-            boundingBox,
-            svgRef,
             svgViewBox,
-            rectangles,
-            setBoundingBox,
-            setRectangles,
-            setCircles,
-            defaultCircleColor,
-            selectedCircleColor
+            setSvgViewBox,
+            svgPanController,
+            setSvgPanController,
+            isDragging
           )
         }
         onMouseUp={(event) =>
-          finishBrush(event, rectangles, setBoundingBox, setRectangles)
+          finishPan(
+            event,
+            svgViewBox,
+            setSvgViewBox,
+            svgPanController,
+            setSvgPanController,
+            frictionCoefficient,
+            isDragging,
+            setIsDragging
+          )
         }
+        // onMouseDown={(event) =>
+        //   startBrush(event, svgRef, svgViewBox, setBoundingBox, setRectangles)
+        // }
+        // onMouseMove={(event) =>
+        //   updateBrush(
+        //     event,
+        //     boundingBox,
+        //     svgRef,
+        //     svgViewBox,
+        //     rectangles,
+        //     setBoundingBox,
+        //     setRectangles,
+        //     setCircles,
+        //     defaultCircleColor,
+        //     selectedCircleColor
+        //   )
+        // }
+        // onMouseUp={(event) =>
+        //   finishBrush(event, rectangles, setBoundingBox, setRectangles)
+        // }
       >
         <svg
           preserveAspectRatio="xMidYMid slice"

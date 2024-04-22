@@ -40,7 +40,6 @@ export const generateViewBoxAttribute = (viewBox: SVGViewBox): string => {
 };
 
 export interface SVGPanController {
-  isDragging: boolean;
   lastMouseX: number;
   lastMouseY: number;
   velocityX: number;

@@ -102,8 +102,8 @@ function App() {
           viewBox={generateViewBoxAttribute(svgViewBox)}
         >
           <rect
-            height={600}
             width={800}
+            height={600}
             fill="none"
             stroke="black"
             strokeWidth={1}

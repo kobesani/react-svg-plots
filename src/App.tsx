@@ -29,7 +29,7 @@ function App() {
   const [boundingBox, setBoundingBox] = useState<BoundingBox | null>(null);
   const [rectangles, setRectangles] = useState<Rectangle[]>([]);
   const [circles, setCircles] = useState<CircleProps[]>([]);
-  const [isDragging, setIsDragging] = useState<boolean>(false)
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const [svgViewBox, setSvgViewBox] = useState<SVGViewBox>({
     minx: 0,
     miny: 0,
@@ -45,18 +45,53 @@ function App() {
     velocityX: 0,
     velocityY: 0,
   });
-
   useEffect(() => {
-    // console.log(svgViewBox);
-    console.log(isDragging);
-  }, [isDragging])
+    function applyInertia(minX, minY, velocityX, velocityY) {
+      // Apply inertia until the velocity is below a certain threshold
+      if (Math.abs(velocityX) < 0.1 && Math.abs(velocityY) < 0.1) {
+        return;
+      }
+      if (isDragging) return;
+      const newViewBoxX = minX - velocityX;
+      const newViewBoxY = minY - velocityY;
+      setSvgViewBox({
+        ...svgViewBox,
+        minx: newViewBoxX,
+        miny: newViewBoxY,
+      });
+
+      // Apply friction to slow down the velocity
+      const newVelocityX = velocityX * frictionCoefficient;
+      const newVelocityY = velocityY * frictionCoefficient;
+
+      setSvgPanController({
+        ...svgPanController,
+        velocityX: newVelocityX,
+        velocityY: newVelocityY,
+      });
+
+      requestAnimationFrame(() =>
+        applyInertia(newViewBoxX, newViewBoxY, newVelocityX, newVelocityY)
+      );
+    }
+
+    // Start applying inertia
+    requestAnimationFrame(() =>
+      applyInertia(
+        svgViewBox.minx,
+        svgViewBox.miny,
+        svgPanController.velocityX,
+        svgPanController.velocityY
+      )
+    );
+  }, [svgPanController, svgViewBox]);
 
   const [mode, setMode] = useState<string | null>(null);
 
   const defaultCircleColor = "seagreen";
   const selectedCircleColor = "purple";
   const defaultCircleRadius = 10;
-  const frictionCoefficient = 0.99;
+  const frictionCoefficient = 0.88;
 
   const changeModeToSelect = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -106,18 +141,7 @@ function App() {
             isDragging
           )
         }
-        onMouseUp={(event) =>
-          finishPan(
-            event,
-            svgViewBox,
-            setSvgViewBox,
-            svgPanController,
-            setSvgPanController,
-            frictionCoefficient,
-            isDragging,
-            setIsDragging
-          )
-        }
+        onMouseUp={(event) => finishPan(event, setIsDragging)}
         // onMouseDown={(event) =>
         //   startBrush(event, svgRef, svgViewBox, setBoundingBox, setRectangles)
         // }
